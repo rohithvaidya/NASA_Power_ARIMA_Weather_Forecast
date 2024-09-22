@@ -1,40 +1,8 @@
-```python
-import pandas as pd 
-import numpy as np 
-import matplotlib.pyplot as plt
-%matplotlib inline
-import os
-from datetime import datetime
-import warnings
-warnings.filterwarnings("ignore") # supress warnings
-import seaborn as sns
-```
+ARIMA for Weather Forecast of Karnataka Districts using NASA Power Data
 
+Data Source: https://power.larc.nasa.gov/
 
-```python
-print(os.listdir("./Krnataka1_weather_data/"))
-filename = os.listdir("./Krnataka1_weather_data/")[2]
-filename
-```
-
-    ['Bagalkot_weather_data.csv', 'Bangalore Rural_weather_data.csv', 'Bangalore_weather_data.csv', 'Belgaum_weather_data.csv', 'Bellary_weather_data.csv', 'Bidar_weather_data.csv', 'Chamarajanagar_weather_data.csv', 'Chikkaballapur_weather_data.csv', 'Chikmagalur_weather_data.csv', 'Chitradurga_weather_data.csv', 'Dakshina Kannada_weather_data.csv', 'Davanagere_weather_data.csv', 'Dharwad_weather_data.csv', 'Gadag_weather_data.csv', 'Gulbarga_weather_data.csv', 'Hassan_weather_data.csv', 'Haveri_weather_data.csv', 'Kodagu_weather_data.csv', 'Kolar_weather_data.csv', 'Koppal_weather_data.csv', 'Mandya_weather_data.csv', 'Mysore_weather_data.csv', 'Raichur_weather_data.csv', 'Ramanagara_weather_data.csv', 'Shimoga_weather_data.csv', 'Tumkur_weather_data.csv', 'Udupi_weather_data.csv', 'Uttara Kannada_weather_data.csv', 'Vijayanagara_weather_data.csv', 'Vijayapura_weather_data.csv', 'Yadgir_weather_data.csv']
-    
-
-
-
-
-    'Bangalore_weather_data.csv'
-
-
-
-
-```python
-df = pd.read_csv("./Krnataka1_weather_data/{}".format(filename))
-df.head()
-```
-
-
-
+The data was extracted using REST API with latitude, longitude and respective parameter values
 
 <div>
 <style scoped>
@@ -201,11 +169,6 @@ T2M_MAX: °C — Maximum air temperature at 2 meters.<br>
 PS: Pa (Pascals) — Surface pressure.
 
 
-```python
-df['Date'] = pd.to_datetime(df['Year'].astype(str) + df['DayOfYear'].astype(str), format='%Y%j')
-df.head()
-```
-
 
 
 
@@ -317,11 +280,6 @@ df.head()
 
 
 
-
-```python
-df.info()
-```
-
     <class 'pandas.core.frame.DataFrame'>
     RangeIndex: 1461 entries, 0 to 1460
     Data columns (total 11 columns):
@@ -340,13 +298,6 @@ df.info()
      10  Date               1461 non-null   datetime64[ns]
     dtypes: datetime64[ns](1), float64(8), int64(2)
     memory usage: 125.7 KB
-    
-
-
-```python
-df.isna().any()
-```
-
 
 
 
@@ -363,25 +314,6 @@ df.isna().any()
     Date                 False
     dtype: bool
 
-
-
-
-```python
-# Plot T2M against Date
-plt.figure(figsize=(30, 10))
-plt.plot(df['Date'], df['T2M'], marker='o', linestyle='-')
-plt.title('Mean Air Temperature (T2M) over Time')
-plt.xlabel('Date')
-plt.ylabel('T2M (°C)')
-plt.grid(True)
-plt.xticks(rotation=45)
-#plt.tight_layout()
-
-# Show plot
-plt.show()
-```
-
-
     
 ![png](output_7_0.png)
     
@@ -390,32 +322,8 @@ plt.show()
 We plot the box plots of all the columns to visualise the outliers. We will treat these outliers in the next step. 
 
 
-```python
-fig, axs = plt.subplots(2,3, figsize = (10,5))
-plt1 = sns.boxplot(df['T2M'], ax = axs[0,0])
-plt2 = sns.boxplot(df['WS2M'], ax = axs[0,1])
-plt3 = sns.boxplot(df['RH2M'], ax = axs[0,2])
-plt1 = sns.boxplot(df['T2M_MIN'], ax = axs[1,0])
-plt2 = sns.boxplot(df['T2M_MAX'], ax = axs[1,1])
-plt3 = sns.boxplot(df['ALLSKY_SFC_SW_DWN'], ax = axs[1,2])
-
-plt.tight_layout()
-```
-
-
     
 ![png](output_9_0.png)
-    
-
-
-
-```python
-plt.boxplot(df.T2M)
-Q1 = df.T2M.quantile(0.25)
-Q3 = df.T2M.quantile(0.75)
-IQR = Q3 - Q1
-
-```
 
 
     
@@ -458,21 +366,6 @@ Display Results:
 
 This method helps to identify extreme values in your dataset that might affect statistical analysis or modeling.
 
-
-```python
-lower_bound = Q1 - 1.5 * IQR
-upper_bound = Q3 + 1.5 * IQR
-
-# Identify outliers
-outliers = df[(df['T2M'] < lower_bound) | (df['T2M'] > upper_bound)]
-
-# Count the number of outliers
-num_outliers = outliers.shape[0]
-
-# Display the number of outliers and the outliers themselves
-print(f'Number of outliers: {num_outliers}')
-print(outliers)
-```
 
     Number of outliers: 27
           Year  DayOfYear    T2M  WS2M  PRECTOTCORR   RH2M  ALLSKY_SFC_SW_DWN  \
@@ -534,42 +427,12 @@ print(outliers)
     1206    23.79    36.55  91.35 2023-04-21  
     
 
-
-```python
-df = df[(df.T2M >= Q1 - 1.5*IQR) & (df.T2M <= Q3 + 1.5*IQR)]
-```
-
 After Outlier Treatment
-
-
-```python
-# Plot T2M against Date
-plt.figure(figsize=(30, 10))
-plt.plot(df['Date'], df['T2M'], marker='o', linestyle='-')
-plt.title('Mean Air Temperature (T2M) over Time')
-plt.xlabel('Date')
-plt.ylabel('T2M (°C)')
-plt.grid(True)
-plt.xticks(rotation=45)
-#plt.tight_layout()
-
-# Show plot
-plt.show()
-```
 
 
     
 ![png](output_15_0.png)
     
-
-
-
-```python
-from statsmodels.tsa.seasonal import seasonal_decompose
-# sd=seasonal_decompose(C,model='additive', period=1)
-sd=seasonal_decompose(df['T2M'],model='additive', period=1)
-sd1=seasonal_decompose(df['T2M'],model='multiplicative', period=1)
-```
 
 The Augmented Dickey-Fuller (ADF) test is a statistical test used to determine whether a given time series is stationary or non-stationary. Stationarity means that the statistical properties of the time series, such as the mean, variance, and autocorrelation, remain constant over time.
 Hypotheses of the ADF Test:
@@ -582,20 +445,6 @@ Hypotheses of the ADF Test:
 p-value: If the p-value is less than a chosen significance level (e.g., 0.05), you reject the null hypothesis (H₀) and conclude that the time series is stationary.
 ADF Statistic: Compare the ADF statistic with the critical values. If the ADF statistic is less than the critical value, you can reject the null hypothesis and conclude the series is stationary.
 
-
-```python
-from statsmodels.tsa.stattools import adfuller
-
-result = adfuller(df['T2M'])
-adf_statistic = result[0]
-p_value = result[1]
-critical_values = result[4]
-
-print(adf_statistic)
-print(p_value)
-critical_values
-
-```
 
     -3.05481318293526
     0.030083017930734077
@@ -614,57 +463,12 @@ We can conclude that the time series is stationary, thus no differencing is requ
 
 Now we want to see if the variance changes with time, for this we plot rolling std deviation and check if variance is changing with or is constant.
 
-
-```python
-
-
-window_size = 30  # Example window size of 30 days
-df['Rolling_Std'] = df['T2M'].rolling(window=window_size).std()
-
-# Plot the original series and rolling standard deviation
-plt.figure(figsize=(10,6))
-plt.plot(df['Date'], df['T2M'], label='Original Time Series')
-plt.plot(df['Date'], df['Rolling_Std'], label=f'Rolling Std (window={window_size})', color='red')
-plt.title('Original Time Series with Rolling Standard Deviation')
-plt.xlabel('Date')
-plt.ylabel('T2M and Rolling Std')
-plt.legend()
-plt.grid(True)
-plt.show()
-```
-
-
     
 ![png](output_21_0.png)
     
 
 
 Since it is not really constant, we now apply the box cox transformation to stablise the variance. We can use log transformation if the variance increases with time. Box cox only works on postive values, so we have to check that or else we have to shift the values by some constant. Here it is not required
-
-
-```python
-
-from scipy import stats
-```
-
-
-```python
-df['BoxCox_T2M'], lmbda = stats.boxcox(df['T2M'])
-```
-
-
-```python
-# Box-Cox transformed time series
-plt.subplot(2, 1, 2)
-plt.plot(df['Date'], df['BoxCox_T2M'], label='Box-Cox Transformed Time Series', color='green')
-plt.title(f'Box-Cox Transformed Time Series (Lambda: {lmbda:.4f})')
-plt.xlabel('Date')
-plt.ylabel('Transformed T2M')
-plt.grid(True)
-
-plt.tight_layout()
-plt.show()
-```
 
 
     
@@ -675,53 +479,12 @@ plt.show()
 Now, lets plot this and check if the variance improved
 
 
-```python
-
-window_size = 30  #Window size is 30 days
-df['Rolling_Std'] = df['BoxCox_T2M'].rolling(window=window_size).std()
-
-
-plt.figure(figsize=(10,6))
-plt.plot(df['Date'], df['BoxCox_T2M'], label='Box Cox Time Series')
-plt.plot(df['Date'], df['Rolling_Std'], label=f'Rolling Std (window={window_size})', color='red')
-plt.title('Box Cox Time Series with Rolling Standard Deviation')
-plt.xlabel('Date')
-plt.ylabel('T2M and Rolling Std')
-plt.legend()
-plt.grid(True)
-plt.show()
-```
-
-
     
 ![png](output_27_0.png)
     
 
 
 Much Better Variance! Lets go ahead and plot the Auto correlation function and Partial Auto correlation
-
-
-```python
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-```
-
-
-```python
-plt.figure(figsize=(12, 6))
-
-plt.subplot(2, 1, 1)
-plot_acf(df['BoxCox_T2M'], lags=40, ax=plt.gca())
-plt.title('Autocorrelation Function (ACF)')
-
-# Step 2: Plot PACF
-plt.subplot(2, 1, 2)
-plot_pacf(df['BoxCox_T2M'], lags=40, ax=plt.gca(), method='ywm')
-plt.title('Partial Autocorrelation Function (PACF)')
-
-plt.tight_layout()
-plt.show()
-```
-
 
     
 ![png](output_30_0.png)
@@ -739,16 +502,6 @@ From this we see that there is no cut off in ACF so we have to difference this a
 Since PACF cuts off after lag 1, it is an Auto regressive process of order 1. Thus p = 1
 
 
-```python
-from statsmodels.tsa.arima.model import ARIMA
-```
-
-
-```python
-model = ARIMA(df["BoxCox_T2M"], order=(1, 0, 1))
-model_fit = model.fit()
-print(model_fit.summary())
-```
 
                                    SARIMAX Results                                
     ==============================================================================
@@ -778,19 +531,6 @@ print(model_fit.summary())
     
 
 
-```python
-forecast = model_fit.forecast(steps=30)
-```
-
-
-```python
-forecast_original = (forecast * (-0.0744) + 1) ** (1 / (-0.0744))
-```
-
-
-```python
-df.tail()
-```
 
 
 
