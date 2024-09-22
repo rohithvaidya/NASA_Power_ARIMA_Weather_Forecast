@@ -5,19 +5,6 @@ Data Source: https://power.larc.nasa.gov/
 The data was extracted using REST API with latitude, longitude and respective parameter values
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -279,7 +266,6 @@ PS: Pa (Pascals) — Surface pressure.
 </div>
 
 
-
     <class 'pandas.core.frame.DataFrame'>
     RangeIndex: 1461 entries, 0 to 1460
     Data columns (total 11 columns):
@@ -298,7 +284,6 @@ PS: Pa (Pascals) — Surface pressure.
      10  Date               1461 non-null   datetime64[ns]
     dtypes: datetime64[ns](1), float64(8), int64(2)
     memory usage: 125.7 KB
-
 
 
     Year                 False
@@ -655,15 +640,6 @@ Since PACF cuts off after lag 1, it is an Auto regressive process of order 1. Th
 
 
 
-
-```python
-forecast_index = pd.date_range(start=df["Date"].iloc[-1] + pd.Timedelta(days=1), periods=30)
-forecast_index
-```
-
-
-
-
     DatetimeIndex(['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04',
                    '2024-01-05', '2024-01-06', '2024-01-07', '2024-01-08',
                    '2024-01-09', '2024-01-10', '2024-01-11', '2024-01-12',
@@ -677,42 +653,10 @@ forecast_index
 
 
 
-```python
-new_df = df[['Date', 'T2M']]
-```
-
-
-```python
-f_pd = pd.DataFrame({"Date":list(forecast_index), "T2M": list(forecast_original)})
-```
-
-
-```python
-new_df = new_df.append(f_pd, ignore_index=True)
-```
-
-
-```python
-new_df.tail()
-```
-
 
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -754,28 +698,7 @@ new_df.tail()
 
 
 
-```python
-plt.figure(figsize=(12, 6))
-plt.subplot(2, 1, 2)
-plt.plot(new_df['Date'], new_df['T2M'], label='Time Series', color='green')
 
-# Highlight the last 10 points
-last_10 = new_df.tail(30)
-plt.plot(last_10['Date'], last_10['T2M'], label='Last 30 Points', color='red', marker='.')
-
-# Title and labels
-plt.title(f'Time Series of T2M from {new_df["Date"].min()} to {new_df["Date"].max()}')
-plt.xlabel('Date')
-plt.ylabel('T2M')
-plt.grid(True)
-
-# Legend
-plt.legend()
-
-# Adjust layout and show
-plt.tight_layout()
-plt.show()
-```
 
 
     
@@ -786,48 +709,11 @@ plt.show()
 Now that we have made the forecast for 30 days lets take real data for 2024 and compare our error values
 
 
-```python
-import requests
-# Define the district and its coordinates
-district = "Bangalore"
-coords = {"lat": 12.9716, "lon": 77.5946}
-# Date range
-start_date = "20240101"
-end_date = "20240130"
-# List of parameters to check
-parameters = ["T2M", "WS2M", "PRECTOTCORR", "RH2M", "ALLSKY_SFC_SW_DWN","T2M_MIN", "T2M_MAX", "PS"]
-# NASA POWER API URL template
-url_template = "https://power.larc.nasa.gov/api/temporal/daily/point?parameters={param}&community=AG&longitude={lon}&latitude={lat}&start={start}&end={end}"
-param = "T2M"
-url = url_template.format(param=param, lon=coords["lon"], lat=coords["lat"],start=start_date, end=end_date)
-# Send the API request
-response = requests.get(url)
-# Print the first 10 lines of the response text (raw response including headers)
-if response.status_code == 200:
-    # Split response text by lines
-    response_lines = response.text.splitlines()
-    # Print the first 10 lines for debugging
-    print(f"Raw API response for parameter '{param}':\n")
-    for i, line in enumerate(response_lines[:50]):
-        print(f"Line {i+1}: {line}")
-else:
-    print(f"Failed to fetch data. Status code: {response.status_code}")
-```
 
     Raw API response for parameter 'T2M':
     
     Line 1: {"type":"Feature","geometry":{"type":"Point","coordinates":[77.5946,12.9716,841.72]},"properties":{"parameter":{"T2M":{"20240101":21.79,"20240102":22.42,"20240103":22.27,"20240104":21.31,"20240105":22.83,"20240106":22.68,"20240107":22.06,"20240108":22.07,"20240109":21.83,"20240110":22.03,"20240111":22.2,"20240112":21.92,"20240113":23.11,"20240114":23.01,"20240115":22.65,"20240116":22.47,"20240117":22.65,"20240118":22.87,"20240119":23.26,"20240120":24.37,"20240121":24.3,"20240122":24.69,"20240123":24.01,"20240124":24.67,"20240125":24.33,"20240126":23.48,"20240127":23.4,"20240128":23.36,"20240129":23.32,"20240130":23.19}}},"header":{"title":"NASA/POWER CERES/MERRA2 Native Resolution Daily Data","api":{"version":"v2.5.9","name":"POWER Daily API"},"sources":["merra2"],"fill_value":-999.0,"start":"20240101","end":"20240130"},"messages":[],"parameters":{"T2M":{"units":"C","longname":"Temperature at 2 Meters"}},"times":{"data":1.197,"process":0.1}}
     
-
-
-```python
-d = {"type":"Feature","geometry":{"type":"Point","coordinates":[77.5946,12.9716,841.72]},"properties":{"parameter":{"T2M":{"20240101":21.79,"20240102":22.42,"20240103":22.27,"20240104":21.31,"20240105":22.83,"20240106":22.68,"20240107":22.06,"20240108":22.07,"20240109":21.83,"20240110":22.03,"20240111":22.2,"20240112":21.92,"20240113":23.11,"20240114":23.01,"20240115":22.65,"20240116":22.47,"20240117":22.65,"20240118":22.87,"20240119":23.26,"20240120":24.37,"20240121":24.3,"20240122":24.69,"20240123":24.01,"20240124":24.67,"20240125":24.33,"20240126":23.48,"20240127":23.4,"20240128":23.36,"20240129":23.32,"20240130":23.19}}},"header":{"title":"NASA/POWER CERES/MERRA2 Native Resolution Daily Data","api":{"version":"v2.5.9","name":"POWER Daily API"},"sources":["merra2"],"fill_value":-999.0,"start":"20240101","end":"20240130"},"messages":[],"parameters":{"T2M":{"units":"C","longname":"Temperature at 2 Meters"}},"times":{"data":1.289,"process":0.11}}
-```
-
-
-```python
-d["properties"]["parameter"]["T2M"].values()
-```
 
 
 
@@ -837,35 +723,6 @@ d["properties"]["parameter"]["T2M"].values()
 
 
 
-```python
-
-x_test_df = pd.DataFrame({"Date":forecast_index, "T2M": list(d["properties"]["parameter"]["T2M"].values())})
-```
-
-
-```python
-plt.figure(figsize=(30, 6))
-plt.plot(new_df['Date'], new_df['T2M'], label='Time Series', color='green')
-
-# Highlight the last 10 points
-last_10 = new_df.tail(30)
-plt.plot(last_10['Date'], last_10['T2M'], label='Forecasted Mean Temp', color='red', marker='.')
-
-plt.plot(x_test_df['Date'], x_test_df['T2M'], label='Actual Mean Temp', color='blue', marker='.')
-
-# Title and labels
-plt.title(f'Time Series of T2M from {new_df["Date"].min()} to {new_df["Date"].max()}')
-plt.xlabel('Date')
-plt.ylabel('T2M')
-plt.grid(True)
-
-# Legend
-plt.legend()
-
-# Adjust layout and show
-
-plt.show()
-```
 
 
     
@@ -874,11 +731,3 @@ plt.show()
 
 
 
-```python
-
-```
-
-
-```python
-
-```
